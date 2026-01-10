@@ -8,11 +8,14 @@ dependencies = [
     "gql[httpx]>=3.5.0",
     "websockets>=14.1",
     "pydantic>=2.10.5",
-    "strawberry-graphql[cli]>=0.253.3",
+    "strawberry-graphql[fastapi]>=0.253.3",
+    "fastapi>=0.115.6",
+    "uvicorn[standard]>=0.34.0",
 ]
 
 [project.scripts]
 claude-agent-api = "claude_agent_api.cli:main"
+claude-agent-server = "claude_agent_api.server:main"
 
 [build-system]
 requires = ["hatchling"]

@@ -316,9 +316,9 @@ Fields: `type`, `subtype`, `uuid`, `sessionId`
 - `bun run start` - Start production server
 - `bun run type-check` - Run TypeScript type checking
 
-### Python Client
+### Python
 
-The Python client provides a type-safe interface using Pydantic models for all API interactions.
+The Python package provides both a GraphQL proxy server and a CLI client. All use Pydantic models for type-safe API interactions.
 
 #### Installation
 
@@ -326,7 +326,23 @@ The Python client provides a type-safe interface using Pydantic models for all A
 make python-sync
 ```
 
-#### Usage
+#### GraphQL Proxy Server
+
+Start a Python GraphQL server that proxies requests to the TypeScript backend:
+
+```bash
+make python-server
+```
+
+Server runs on:
+- HTTP: http://localhost:4001/graphql
+
+Or run directly:
+```bash
+uv run claude-agent-server
+```
+
+#### CLI Client Usage
 
 1. **Single prompt (non-streaming):**
 ```bash

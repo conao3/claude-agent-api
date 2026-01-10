@@ -6,6 +6,7 @@ help:
 	@echo "  python-fmt     - Format Python code with ruff"
 	@echo "  python-lint    - Lint Python code with ruff"
 	@echo "  python-run     - Run Python CLI (usage: make python-run ARGS='prompt \"hello\"')"
+	@echo "  python-server  - Start Python GraphQL proxy server on port 4001"
 	@echo "  ts-install     - Install TypeScript dependencies"
 	@echo "  ts-dev         - Start TypeScript development server"
 	@echo "  ts-typecheck   - Run TypeScript type checking"
@@ -29,6 +30,10 @@ python-lint:
 .PHONY: python-run
 python-run:
 	cd python && uv run claude-agent-api $(ARGS)
+
+.PHONY: python-server
+python-server:
+	cd python && uv run claude-agent-server
 
 .PHONY: ts-install
 ts-install:
