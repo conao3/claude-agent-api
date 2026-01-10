@@ -3,6 +3,7 @@ import {
   unstable_v2_createSession,
   unstable_v2_resumeSession,
   type SDKMessage,
+  SDKAssistantMessage,
 } from "@anthropic-ai/claude-agent-sdk";
 
 type CreateSessionArgs = {
@@ -29,14 +30,24 @@ export async function createSession(
   return { sessionId: session.sessionId };
 }
 
+type BetaContentBlock = {
+  type: 'text';
+  text: string;
+}
+
 type SendMessageArgs = {
   sessionId: string;
   prompt: string;
 }
 
+type SendMessageResult = (
+  Exclude<SDKMessage, SDKAssistantMessage> |
+  SDKAssistantMessage & { message: string }
+)
+
 export async function* sendMessage(
   args: SendMessageArgs
-): AsyncGenerator<SDKMessage> {
+): AsyncGenerator<SendMessageResult> {
   const session = unstable_v2_resumeSession(args.sessionId, {
     model: "claude-sonnet-4-5-20250929",
   });
@@ -44,6 +55,11 @@ export async function* sendMessage(
   await session.send(args.prompt);
 
   for await (const msg of session.stream()) {
+    if (msg.type === "assistant") {
+      const content: BetaContentBlock[] = msg.message.content;
+      yield { ...msg, message: content.filter(b => b.type === 'text').map(b => b.text).join('') };
+      continue;
+    }
     yield msg;
   }
 

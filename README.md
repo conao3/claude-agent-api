@@ -118,10 +118,6 @@ Send a message and receive streaming responses.
 - `SystemMessage` - System messages
 - `PartialAssistantMessage` - Streaming partial messages
 - `CompactBoundaryMessage` - Conversation compaction boundary
-- `StatusMessage` - Status updates
-- `HookResponseMessage` - Hook responses
-- `ToolProgressMessage` - Tool progress updates
-- `AuthStatusMessage` - Authentication status
 
 **Example:**
 
@@ -277,9 +273,6 @@ Streaming partial messages during response generation.
 
 ### CompactBoundaryMessage
 Fields: `type`, `subtype`, `uuid`, `sessionId`
-
-### StatusMessage / HookResponseMessage / ToolProgressMessage / AuthStatusMessage
-Fields: `type`
 
 ## Scripts
 

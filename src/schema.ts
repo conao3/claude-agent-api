@@ -70,6 +70,7 @@ AssistantMessageType.implement({
       type: "String",
       nullable: true,
     }),
+    message: t.expose("message", { type: "String" }),
   }),
 });
 
