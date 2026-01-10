@@ -23,8 +23,10 @@
       }: let
         overlay = final: prev: let
           bun = prev.bun;
+          python = prev.python313;
+          uv = prev.uv;
         in {
-          inherit bun;
+          inherit bun python uv;
         };
         pkgs = import inputs.nixpkgs {
           inherit system;
@@ -34,15 +36,16 @@
         devShells.default = pkgs.mkShell {
           packages = with pkgs; [
             bun
+            python
+            uv
           ];
         };
 
         treefmt = {
           projectRootFile = "flake.nix";
           programs.prettier.enable = true;
+          programs.ruff.enable = true;
         };
-
-        formatter = config.treefmt.build.wrapper;
       };
     };
 }
