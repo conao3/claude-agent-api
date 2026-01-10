@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "@anthropic-ai/claude-agent-sdk": "^0.2.3",
+    "@anthropic-ai/sdk": "^0.71.2",
     "@pothos/core": "^4.5.1",
     "graphql": "^16.9.0",
     "graphql-yoga": "^5.10.7"

@@ -11,6 +11,38 @@ nix develop
 bun install
 ```
 
+### Authentication
+
+Choose one of the following authentication methods:
+
+#### Option 1: Use Claude Code Max Plan (Recommended)
+
+Authenticate with your Claude Pro or Max plan subscription:
+
+```bash
+claude login
+```
+
+**Important**: Make sure `ANTHROPIC_API_KEY` environment variable is **not** set. If it's set, Claude Code will use the API key instead of your subscription, resulting in API usage charges.
+
+```bash
+# Check if ANTHROPIC_API_KEY is set
+env | grep ANTHROPIC_API_KEY
+
+# If set, unset it
+unset ANTHROPIC_API_KEY
+```
+
+#### Option 2: Use Anthropic API Key
+
+Set the `ANTHROPIC_API_KEY` environment variable:
+
+```bash
+export ANTHROPIC_API_KEY=your-api-key-here
+```
+
+Get your API key from https://console.anthropic.com/settings/keys
+
 ## Development
 
 ```bash

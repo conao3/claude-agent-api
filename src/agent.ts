@@ -17,22 +17,27 @@ type CreateSessionResult = {
 export async function createSession(
   args: CreateSessionArgs
 ): Promise<CreateSessionResult> {
-  await using session = unstable_v2_createSession({
+  const session = unstable_v2_createSession({
     model: args.model || "claude-sonnet-4-5-20250929",
   });
 
-  // Session ID not available until after receiving messages
-  await session.send("");
-  for await (const _ of session.stream()) {
-    break;
+  await session.send("hi");
+
+  let sessionId: string | undefined;
+  for await (const msg of session.stream()) {
+    if (msg.type === "system" && msg.subtype === "init") {
+      sessionId = msg.session_id;
+      break;
+    }
   }
 
-  return { sessionId: session.sessionId };
-}
+  session.close();
 
-type BetaContentBlock = {
-  type: 'text';
-  text: string;
+  if (!sessionId) {
+    throw new Error("Failed to get session ID");
+  }
+
+  return { sessionId };
 }
 
 type SendMessageArgs = {
@@ -42,7 +47,7 @@ type SendMessageArgs = {
 
 type SendMessageResult = (
   Exclude<SDKMessage, SDKAssistantMessage> |
-  SDKAssistantMessage & { message: string }
+  Omit<SDKAssistantMessage, "message"> & { message: string }
 )
 
 export async function* sendMessage(
@@ -56,8 +61,7 @@ export async function* sendMessage(
 
   for await (const msg of session.stream()) {
     if (msg.type === "assistant") {
-      const content: BetaContentBlock[] = msg.message.content;
-      yield { ...msg, message: content.filter(b => b.type === 'text').map(b => b.text).join('') };
+      yield { ...msg, message: msg.message.content.filter(b => b.type === 'text').map(b => b.text).join('') };
       continue;
     }
     yield msg;

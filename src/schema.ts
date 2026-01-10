@@ -58,8 +58,12 @@ ModelInfoType.implement({
   }),
 });
 
+type AssistantMessageWithStringContent = Omit<SDKAssistantMessage, "message"> & {
+  message: string;
+};
+
 const AssistantMessageType =
-  builder.objectRef<SDKAssistantMessage>("AssistantMessage");
+  builder.objectRef<AssistantMessageWithStringContent>("AssistantMessage");
 
 AssistantMessageType.implement({
   fields: (t) => ({
@@ -248,7 +252,7 @@ builder.subscriptionType({
         ];
         if (validTypes.includes(message.type)) {
           return message as
-            | SDKAssistantMessage
+            | AssistantMessageWithStringContent
             | SDKUserMessage
             | SDKUserMessageReplay
             | SDKResultMessage
