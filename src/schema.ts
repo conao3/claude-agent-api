@@ -1,6 +1,23 @@
 import SchemaBuilder from "@pothos/core";
+import { runPrompt } from "./agent";
 
 const builder = new SchemaBuilder({});
+
+const PromptResultType = builder.objectRef<{
+  result: string;
+  sessionId: string;
+  totalCostUsd: number;
+  durationMs: number;
+}>("PromptResult");
+
+PromptResultType.implement({
+  fields: (t) => ({
+    result: t.exposeString("result"),
+    sessionId: t.exposeString("sessionId"),
+    totalCostUsd: t.exposeFloat("totalCostUsd"),
+    durationMs: t.exposeFloat("durationMs"),
+  }),
+});
 
 function helloResolver(name: string | null | undefined): string {
   return `hello ${name || "world"}`;
@@ -13,6 +30,15 @@ builder.queryType({
         name: t.arg.string(),
       },
       resolve: (parent, { name }) => helloResolver(name),
+    }),
+    runPrompt: t.field({
+      type: PromptResultType,
+      args: {
+        prompt: t.arg.string({ required: true }),
+        model: t.arg.string(),
+      },
+      resolve: async (parent, { prompt, model }) =>
+        runPrompt({ prompt, model: model || undefined }),
     }),
   }),
 });
