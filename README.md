@@ -392,3 +392,6 @@ await client.close()
 ```
 
 All response types are validated using Pydantic models for type safety.
+
+## memo
+- ref: https://github.com/anthropics/claude-agent-sdk-python/blob/main/src/claude_agent_sdk/_internal/transport/subprocess_cli.py
