@@ -31,6 +31,11 @@ builder.queryType({
       },
       resolve: (parent, { name }) => helloResolver(name),
     }),
+  }),
+});
+
+builder.mutationType({
+  fields: (t) => ({
     runPrompt: t.field({
       type: PromptResultType,
       args: {

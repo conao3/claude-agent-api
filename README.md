@@ -19,9 +19,11 @@ bun run dev
 
 Server runs on http://localhost:4000/graphql
 
-## Available Queries
+## API
 
-### hello
+### Queries
+
+#### hello
 
 Simple greeting query.
 
@@ -31,12 +33,14 @@ query {
 }
 ```
 
-### runPrompt
+### Mutations
+
+#### runPrompt
 
 Execute a prompt using Claude Agent SDK V2.
 
 ```graphql
-query {
+mutation {
   runPrompt(prompt: "List files in current directory", model: "claude-sonnet-4-5-20250929") {
     result
     sessionId
