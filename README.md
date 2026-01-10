@@ -1,8 +1,10 @@
 # Claude Agent API
 
-GraphQL server for Claude Agent API using Bun, GraphQL Yoga, and Pothos.
+GraphQL server and Python client for Claude Agent API.
 
-Uses Claude Agent SDK V2 interface (preview) with WebSocket subscriptions for streaming responses.
+**TypeScript Server:** Built with Bun, GraphQL Yoga, and Pothos. Uses Claude Agent SDK V2 interface (preview) with WebSocket subscriptions for streaming responses.
+
+**Python Client:** Type-safe GraphQL client with Pydantic models for all API interactions.
 
 ## Setup
 
@@ -308,6 +310,65 @@ Fields: `type`, `subtype`, `uuid`, `sessionId`
 
 ## Scripts
 
+### TypeScript Server
+
 - `bun run dev` - Start development server with watch mode
 - `bun run start` - Start production server
 - `bun run type-check` - Run TypeScript type checking
+
+### Python Client
+
+The Python client provides a type-safe interface using Pydantic models for all API interactions.
+
+#### Installation
+
+```bash
+make python-sync
+```
+
+#### Usage
+
+1. **Single prompt (non-streaming):**
+```bash
+uv run claude-agent-api prompt "List files in current directory"
+```
+
+2. **Send message to existing session:**
+```bash
+uv run claude-agent-api message <session-id> "Show me the first file"
+```
+
+3. **Interactive mode:**
+```bash
+uv run claude-agent-api interactive
+```
+
+Or using Make:
+```bash
+make python-run ARGS='prompt "hello"'
+make python-run ARGS='interactive'
+```
+
+#### Python API
+
+```python
+from claude_agent_api import ClaudeAgentClient, AssistantMessage, ResultMessage
+
+client = ClaudeAgentClient()
+
+result = await client.run_prompt("Hello, Claude!")
+print(result.result)
+print(result.session_id)
+print(result.total_cost_usd)
+
+session = await client.create_session()
+async for message in client.send_message(session.session_id, "What is 2+2?"):
+    if isinstance(message, AssistantMessage):
+        print(message.message)
+    elif isinstance(message, ResultMessage):
+        print(f"Cost: ${message.total_cost_usd}")
+
+await client.close()
+```
+
+All response types are validated using Pydantic models for type safety.

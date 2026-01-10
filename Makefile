@@ -5,6 +5,7 @@ help:
 	@echo "  python-lock    - Update Python lock file"
 	@echo "  python-fmt     - Format Python code with ruff"
 	@echo "  python-lint    - Lint Python code with ruff"
+	@echo "  python-run     - Run Python CLI (usage: make python-run ARGS='prompt \"hello\"')"
 	@echo "  ts-install     - Install TypeScript dependencies"
 	@echo "  ts-dev         - Start TypeScript development server"
 	@echo "  ts-typecheck   - Run TypeScript type checking"
@@ -24,6 +25,10 @@ python-fmt:
 .PHONY: python-lint
 python-lint:
 	cd python && uv run ruff check .
+
+.PHONY: python-run
+python-run:
+	cd python && uv run claude-agent-api $(ARGS)
 
 .PHONY: ts-install
 ts-install:
