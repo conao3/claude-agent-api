@@ -1,5 +1,6 @@
 import asyncio
 from .client import ClaudeAgentClient
+from .config import get_claude_cli_path
 from .models import AssistantMessage, ResultMessage
 
 
@@ -56,9 +57,8 @@ async def main_async():
     import argparse
 
     parser = argparse.ArgumentParser(description="Claude Agent API Client")
-    parser.add_argument("--http-url", default="http://localhost:4000/graphql", help="HTTP GraphQL endpoint")
-    parser.add_argument("--ws-url", default="ws://localhost:4000/graphql", help="WebSocket GraphQL endpoint")
     parser.add_argument("--model", help="Claude model to use")
+    parser.add_argument("--cli-path", help="Path to Claude Code CLI")
 
     subparsers = parser.add_subparsers(dest="command", help="Commands")
 
@@ -73,7 +73,8 @@ async def main_async():
 
     args = parser.parse_args()
 
-    client = ClaudeAgentClient(http_url=args.http_url, ws_url=args.ws_url)
+    cli_path = args.cli_path or get_claude_cli_path()
+    client = ClaudeAgentClient(model=args.model or "claude-sonnet-4-5-20250929", cli_path=cli_path)
 
     try:
         if args.command == "prompt":

@@ -318,7 +318,9 @@ Fields: `type`, `subtype`, `uuid`, `sessionId`
 
 ### Python
 
-The Python package provides both a GraphQL proxy server and a CLI client. All use Pydantic models for type-safe API interactions.
+The Python package provides both a GraphQL server and a CLI client, using Claude Agent SDK directly. All use Pydantic models for type-safe API interactions.
+
+**Note:** Python implementation is standalone and does not depend on the TypeScript server.
 
 #### Installation
 
@@ -326,9 +328,11 @@ The Python package provides both a GraphQL proxy server and a CLI client. All us
 make python-sync
 ```
 
-#### GraphQL Proxy Server
+This installs `claude-agent-sdk` which includes the Claude Code CLI automatically.
 
-Start a Python GraphQL server that proxies requests to the TypeScript backend:
+#### GraphQL Server
+
+Start a Python GraphQL server using Claude Agent SDK:
 
 ```bash
 make python-server

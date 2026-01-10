@@ -1,6 +1,7 @@
 import strawberry
 from typing import AsyncGenerator
 from .client import ClaudeAgentClient
+from .config import get_claude_cli_path
 from .models import (
     SessionResult as SessionResultModel,
     PromptResult as PromptResultModel,
@@ -111,8 +112,9 @@ class Query:
 @strawberry.type
 class Mutation:
     @strawberry.mutation
-    async def create_session(self, model: str | None = None, http_url: str = "http://localhost:4000/graphql", ws_url: str = "ws://localhost:4000/graphql") -> SessionResult:
-        client = ClaudeAgentClient(http_url=http_url, ws_url=ws_url)
+    async def create_session(self, model: str | None = None) -> SessionResult:
+        cli_path = get_claude_cli_path()
+        client = ClaudeAgentClient(model=model or "claude-sonnet-4-5-20250929", cli_path=cli_path)
         try:
             result = await client.create_session(model)
             return SessionResult.from_pydantic(result)
@@ -120,8 +122,9 @@ class Mutation:
             await client.close()
 
     @strawberry.mutation
-    async def run_prompt(self, prompt: str, model: str | None = None, http_url: str = "http://localhost:4000/graphql", ws_url: str = "ws://localhost:4000/graphql") -> PromptResult:
-        client = ClaudeAgentClient(http_url=http_url, ws_url=ws_url)
+    async def run_prompt(self, prompt: str, model: str | None = None) -> PromptResult:
+        cli_path = get_claude_cli_path()
+        client = ClaudeAgentClient(model=model or "claude-sonnet-4-5-20250929", cli_path=cli_path)
         try:
             result = await client.run_prompt(prompt, model)
             return PromptResult.from_pydantic(result)
@@ -132,8 +135,9 @@ class Mutation:
 @strawberry.type
 class Subscription:
     @strawberry.subscription
-    async def send_message(self, session_id: str, prompt: str, http_url: str = "http://localhost:4000/graphql", ws_url: str = "ws://localhost:4000/graphql") -> AsyncGenerator[Message, None]:
-        client = ClaudeAgentClient(http_url=http_url, ws_url=ws_url)
+    async def send_message(self, session_id: str, prompt: str) -> AsyncGenerator[Message, None]:
+        cli_path = get_claude_cli_path()
+        client = ClaudeAgentClient(cli_path=cli_path)
         try:
             async for message in client.send_message(session_id, prompt):
                 if isinstance(message, AssistantMessageModel):

@@ -9,10 +9,14 @@ class ModelInfo(BaseModel):
 
 
 class SessionResult(BaseModel):
+    model_config = {"populate_by_name": True}
+
     session_id: str = Field(alias="sessionId")
 
 
 class PromptResult(BaseModel):
+    model_config = {"populate_by_name": True}
+
     result: str
     session_id: str = Field(alias="sessionId")
     total_cost_usd: float = Field(alias="totalCostUsd")
@@ -20,6 +24,8 @@ class PromptResult(BaseModel):
 
 
 class AssistantMessage(BaseModel):
+    model_config = {"populate_by_name": True}
+
     type: Literal["assistant"]
     uuid: str
     session_id: str = Field(alias="sessionId")
@@ -28,6 +34,8 @@ class AssistantMessage(BaseModel):
 
 
 class UserMessage(BaseModel):
+    model_config = {"populate_by_name": True}
+
     type: Literal["user"]
     uuid: str | None = None
     session_id: str = Field(alias="sessionId")
@@ -35,6 +43,8 @@ class UserMessage(BaseModel):
 
 
 class UserMessageReplay(BaseModel):
+    model_config = {"populate_by_name": True}
+
     type: Literal["user"]
     uuid: str
     session_id: str = Field(alias="sessionId")
@@ -42,6 +52,8 @@ class UserMessageReplay(BaseModel):
 
 
 class ResultMessage(BaseModel):
+    model_config = {"populate_by_name": True}
+
     type: Literal["result"]
     subtype: str
     uuid: str
@@ -55,6 +67,8 @@ class ResultMessage(BaseModel):
 
 
 class SystemMessage(BaseModel):
+    model_config = {"populate_by_name": True}
+
     type: Literal["system"]
     subtype: str
     uuid: str
@@ -62,6 +76,8 @@ class SystemMessage(BaseModel):
 
 
 class PartialAssistantMessage(BaseModel):
+    model_config = {"populate_by_name": True}
+
     type: Literal["stream_event"]
     uuid: str
     session_id: str = Field(alias="sessionId")
@@ -69,6 +85,8 @@ class PartialAssistantMessage(BaseModel):
 
 
 class CompactBoundaryMessage(BaseModel):
+    model_config = {"populate_by_name": True}
+
     type: Literal["system"]
     subtype: Literal["compact_boundary"]
     uuid: str
