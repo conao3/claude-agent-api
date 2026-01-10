@@ -21,7 +21,7 @@ class ClaudeAgentClient:
         session_id: str | None = None
         async for msg in client.receive_response():
             if isinstance(msg, SDKSystemMessage) and msg.subtype == "init":
-                session_id = msg.session_id
+                session_id = msg.data.get("session_id")
                 break
 
         if not session_id:
@@ -60,6 +60,8 @@ class ClaudeAgentClient:
         )
 
     async def send_message(self, session_id: str, prompt: str) -> AsyncIterator[Message]:
+        import uuid as uuid_module
+
         client = self._sessions.get(session_id)
         if not client:
             raise ValueError(f"Session {session_id} not found")
@@ -75,31 +77,32 @@ class ClaudeAgentClient:
 
                 yield AssistantMessage(
                     type="assistant",
-                    uuid=msg.uuid,
-                    session_id=msg.session_id,
+                    uuid=str(uuid_module.uuid4()),
+                    session_id=session_id,
                     parent_tool_use_id=msg.parent_tool_use_id,
                     message=text_content,
                 )
             elif isinstance(msg, SDKUserMessage):
-                if msg.uuid:
+                msg_uuid = str(uuid_module.uuid4())
+                if hasattr(msg, 'uuid') and msg.uuid:
                     yield UserMessageReplay(
                         type="user",
-                        uuid=msg.uuid,
-                        session_id=msg.session_id,
-                        parent_tool_use_id=msg.parent_tool_use_id,
+                        uuid=msg_uuid,
+                        session_id=session_id,
+                        parent_tool_use_id=msg.parent_tool_use_id if hasattr(msg, 'parent_tool_use_id') else None,
                     )
                 else:
                     yield UserMessage(
                         type="user",
-                        uuid=msg.uuid,
-                        session_id=msg.session_id,
-                        parent_tool_use_id=msg.parent_tool_use_id,
+                        uuid=None,
+                        session_id=session_id,
+                        parent_tool_use_id=msg.parent_tool_use_id if hasattr(msg, 'parent_tool_use_id') else None,
                     )
             elif isinstance(msg, SDKResultMessage):
                 yield ResultMessage(
                     type="result",
                     subtype=msg.subtype,
-                    uuid=msg.uuid,
+                    uuid=str(uuid_module.uuid4()),
                     session_id=msg.session_id,
                     duration_ms=msg.duration_ms,
                     duration_api_ms=msg.duration_api_ms,
@@ -109,19 +112,22 @@ class ClaudeAgentClient:
                     result=msg.result if msg.subtype == "success" else None,
                 )
             elif isinstance(msg, SDKSystemMessage):
+                msg_uuid = msg.data.get("uuid") if hasattr(msg, "data") else str(uuid_module.uuid4())
+                msg_session_id = msg.data.get("session_id") if hasattr(msg, "data") else session_id
+
                 if msg.subtype == "compact_boundary":
                     yield CompactBoundaryMessage(
                         type="system",
                         subtype=msg.subtype,
-                        uuid=msg.uuid,
-                        session_id=msg.session_id,
+                        uuid=msg_uuid,
+                        session_id=msg_session_id,
                     )
                 else:
                     yield SystemMessage(
                         type="system",
                         subtype=msg.subtype,
-                        uuid=msg.uuid,
-                        session_id=msg.session_id,
+                        uuid=msg_uuid,
+                        session_id=msg_session_id,
                     )
 
     async def close(self):

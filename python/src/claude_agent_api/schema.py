@@ -14,6 +14,15 @@ from .models import (
     CompactBoundaryMessage as CompactBoundaryMessageModel,
 )
 
+_global_client: ClaudeAgentClient | None = None
+
+def get_global_client() -> ClaudeAgentClient:
+    global _global_client
+    if _global_client is None:
+        cli_path = get_claude_cli_path()
+        _global_client = ClaudeAgentClient(cli_path=cli_path)
+    return _global_client
+
 
 @strawberry.experimental.pydantic.type(model=SessionResultModel)
 class SessionResult:
@@ -113,13 +122,9 @@ class Query:
 class Mutation:
     @strawberry.mutation
     async def create_session(self, model: str | None = None) -> SessionResult:
-        cli_path = get_claude_cli_path()
-        client = ClaudeAgentClient(model=model or "claude-sonnet-4-5-20250929", cli_path=cli_path)
-        try:
-            result = await client.create_session(model)
-            return SessionResult.from_pydantic(result)
-        finally:
-            await client.close()
+        client = get_global_client()
+        result = await client.create_session(model)
+        return SessionResult.from_pydantic(result)
 
     @strawberry.mutation
     async def run_prompt(self, prompt: str, model: str | None = None) -> PromptResult:
@@ -136,26 +141,22 @@ class Mutation:
 class Subscription:
     @strawberry.subscription
     async def send_message(self, session_id: str, prompt: str) -> AsyncGenerator[Message, None]:
-        cli_path = get_claude_cli_path()
-        client = ClaudeAgentClient(cli_path=cli_path)
-        try:
-            async for message in client.send_message(session_id, prompt):
-                if isinstance(message, AssistantMessageModel):
-                    yield AssistantMessage.from_pydantic(message)
-                elif isinstance(message, UserMessageModel):
-                    yield UserMessage.from_pydantic(message)
-                elif isinstance(message, UserMessageReplayModel):
-                    yield UserMessageReplay.from_pydantic(message)
-                elif isinstance(message, ResultMessageModel):
-                    yield ResultMessage.from_pydantic(message)
-                elif isinstance(message, SystemMessageModel):
-                    yield SystemMessage.from_pydantic(message)
-                elif isinstance(message, PartialAssistantMessageModel):
-                    yield PartialAssistantMessage.from_pydantic(message)
-                elif isinstance(message, CompactBoundaryMessageModel):
-                    yield CompactBoundaryMessage.from_pydantic(message)
-        finally:
-            await client.close()
+        client = get_global_client()
+        async for message in client.send_message(session_id, prompt):
+            if isinstance(message, AssistantMessageModel):
+                yield AssistantMessage.from_pydantic(message)
+            elif isinstance(message, UserMessageModel):
+                yield UserMessage.from_pydantic(message)
+            elif isinstance(message, UserMessageReplayModel):
+                yield UserMessageReplay.from_pydantic(message)
+            elif isinstance(message, ResultMessageModel):
+                yield ResultMessage.from_pydantic(message)
+            elif isinstance(message, SystemMessageModel):
+                yield SystemMessage.from_pydantic(message)
+            elif isinstance(message, PartialAssistantMessageModel):
+                yield PartialAssistantMessage.from_pydantic(message)
+            elif isinstance(message, CompactBoundaryMessageModel):
+                yield CompactBoundaryMessage.from_pydantic(message)
 
 
 schema = strawberry.Schema(query=Query, mutation=Mutation, subscription=Subscription)
