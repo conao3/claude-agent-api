@@ -5,7 +5,16 @@ import {
   runPrompt,
   SUPPORTED_MODELS,
 } from "./agent";
-import type { SDKMessage } from "@anthropic-ai/claude-agent-sdk";
+import type {
+  SDKMessage,
+  SDKAssistantMessage,
+  SDKUserMessage,
+  SDKUserMessageReplay,
+  SDKResultMessage,
+  SDKSystemMessage,
+  SDKPartialAssistantMessage,
+  SDKCompactBoundaryMessage,
+} from "@anthropic-ai/claude-agent-sdk";
 
 const builder = new SchemaBuilder({});
 
@@ -49,13 +58,135 @@ ModelInfoType.implement({
   }),
 });
 
-const MessageType = builder.objectRef<SDKMessage>("Message");
+const AssistantMessageType =
+  builder.objectRef<SDKAssistantMessage>("AssistantMessage");
 
-MessageType.implement({
+AssistantMessageType.implement({
   fields: (t) => ({
-    type: t.exposeString("type"),
-    sessionId: t.exposeString("session_id"),
+    type: t.expose("type", { type: "String" }),
+    uuid: t.expose("uuid", { type: "String" }),
+    sessionId: t.expose("session_id", { type: "String" }),
+    parentToolUseId: t.expose("parent_tool_use_id", {
+      type: "String",
+      nullable: true,
+    }),
   }),
+});
+
+const UserMessageType = builder.objectRef<SDKUserMessage>("UserMessage");
+
+UserMessageType.implement({
+  fields: (t) => ({
+    type: t.expose("type", { type: "String" }),
+    uuid: t.expose("uuid", { type: "String", nullable: true }),
+    sessionId: t.expose("session_id", { type: "String" }),
+    parentToolUseId: t.expose("parent_tool_use_id", {
+      type: "String",
+      nullable: true,
+    }),
+  }),
+});
+
+const UserMessageReplayType = builder.objectRef<SDKUserMessageReplay>(
+  "UserMessageReplay"
+);
+
+UserMessageReplayType.implement({
+  fields: (t) => ({
+    type: t.expose("type", { type: "String" }),
+    uuid: t.expose("uuid", { type: "String" }),
+    sessionId: t.expose("session_id", { type: "String" }),
+    parentToolUseId: t.expose("parent_tool_use_id", {
+      type: "String",
+      nullable: true,
+    }),
+  }),
+});
+
+const ResultMessageType = builder.objectRef<SDKResultMessage>("ResultMessage");
+
+ResultMessageType.implement({
+  fields: (t) => ({
+    type: t.expose("type", { type: "String" }),
+    subtype: t.expose("subtype", { type: "String" }),
+    uuid: t.expose("uuid", { type: "String" }),
+    sessionId: t.expose("session_id", { type: "String" }),
+    durationMs: t.expose("duration_ms", { type: "Float" }),
+    durationApiMs: t.expose("duration_api_ms", { type: "Float" }),
+    isError: t.expose("is_error", { type: "Boolean" }),
+    numTurns: t.expose("num_turns", { type: "Int" }),
+    totalCostUsd: t.expose("total_cost_usd", { type: "Float" }),
+    result: t.field({
+      type: "String",
+      nullable: true,
+      resolve: (msg) => (msg.subtype === "success" ? msg.result : null),
+    }),
+  }),
+});
+
+const SystemMessageType = builder.objectRef<SDKSystemMessage>("SystemMessage");
+
+SystemMessageType.implement({
+  fields: (t) => ({
+    type: t.expose("type", { type: "String" }),
+    subtype: t.expose("subtype", { type: "String" }),
+    uuid: t.expose("uuid", { type: "String" }),
+    sessionId: t.expose("session_id", { type: "String" }),
+  }),
+});
+
+const PartialAssistantMessageType =
+  builder.objectRef<SDKPartialAssistantMessage>("PartialAssistantMessage");
+
+PartialAssistantMessageType.implement({
+  fields: (t) => ({
+    type: t.expose("type", { type: "String" }),
+    uuid: t.expose("uuid", { type: "String" }),
+    sessionId: t.expose("session_id", { type: "String" }),
+    parentToolUseId: t.expose("parent_tool_use_id", {
+      type: "String",
+      nullable: true,
+    }),
+  }),
+});
+
+const CompactBoundaryMessageType = builder.objectRef<SDKCompactBoundaryMessage>(
+  "CompactBoundaryMessage"
+);
+
+CompactBoundaryMessageType.implement({
+  fields: (t) => ({
+    type: t.expose("type", { type: "String" }),
+    subtype: t.expose("subtype", { type: "String" }),
+    uuid: t.expose("uuid", { type: "String" }),
+    sessionId: t.expose("session_id", { type: "String" }),
+  }),
+});
+
+const MessageUnion = builder.unionType("Message", {
+  types: [
+    AssistantMessageType,
+    UserMessageType,
+    UserMessageReplayType,
+    ResultMessageType,
+    SystemMessageType,
+    PartialAssistantMessageType,
+    CompactBoundaryMessageType,
+  ],
+  resolveType: (msg) => {
+    if (msg.type === "assistant") return "AssistantMessage";
+    if (msg.type === "user") {
+      if (msg.uuid) return "UserMessageReplay";
+      return "UserMessage";
+    }
+    if (msg.type === "result") return "ResultMessage";
+    if (msg.type === "system") {
+      if (msg.subtype === "compact_boundary") return "CompactBoundaryMessage";
+      return "SystemMessage";
+    }
+    if (msg.type === "stream_event") return "PartialAssistantMessage";
+    throw new Error(`Unknown message type: ${(msg as any).type}`);
+  },
 });
 
 function helloResolver(name: string | null | undefined): string {
@@ -84,8 +215,7 @@ builder.mutationType({
       args: {
         model: t.arg.string(),
       },
-      resolve: async (parent, args) =>
-        createSession(args),
+      resolve: (parent, args) => createSession(args),
     }),
     runPrompt: t.field({
       type: PromptResultType,
@@ -93,8 +223,7 @@ builder.mutationType({
         prompt: t.arg.string({ required: true }),
         model: t.arg.string(),
       },
-      resolve: async (parent, args) =>
-        runPrompt(args),
+      resolve: (parent, args) => runPrompt(args),
     }),
   }),
 });
@@ -102,14 +231,32 @@ builder.mutationType({
 builder.subscriptionType({
   fields: (t) => ({
     sendMessage: t.field({
-      type: MessageType,
+      type: MessageUnion,
       args: {
         sessionId: t.arg.string({ required: true }),
         prompt: t.arg.string({ required: true }),
       },
-      subscribe: async (parent, args) =>
-        sendMessage(args),
-      resolve: (message) => message,
+      subscribe: (parent, args) => sendMessage(args),
+      resolve: (message) => {
+        const validTypes = [
+          "assistant",
+          "user",
+          "result",
+          "system",
+          "stream_event",
+        ];
+        if (validTypes.includes(message.type)) {
+          return message as
+            | SDKAssistantMessage
+            | SDKUserMessage
+            | SDKUserMessageReplay
+            | SDKResultMessage
+            | SDKSystemMessage
+            | SDKPartialAssistantMessage
+            | SDKCompactBoundaryMessage;
+        }
+        return null;
+      },
     }),
   }),
 });

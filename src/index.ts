@@ -7,11 +7,10 @@ const yoga = createYoga({
 });
 
 const server = Bun.serve({
-  fetch: yoga,
+  fetch: yoga.fetch,
   port: 4000,
 });
 
 console.log(
   `GraphQL server is running on http://localhost:${server.port}/graphql`
 );
-console.log(`WebSocket endpoint: ws://localhost:${server.port}/graphql`);

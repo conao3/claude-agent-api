@@ -111,6 +111,18 @@ Send a message and receive streaming responses.
 - `sessionId` (required): Session ID from createSession
 - `prompt` (required): The prompt to send
 
+**Returns:** Union type of:
+- `AssistantMessage` - Assistant responses
+- `UserMessage` / `UserMessageReplay` - User messages
+- `ResultMessage` - Final result with cost and duration
+- `SystemMessage` - System messages
+- `PartialAssistantMessage` - Streaming partial messages
+- `CompactBoundaryMessage` - Conversation compaction boundary
+- `StatusMessage` - Status updates
+- `HookResponseMessage` - Hook responses
+- `ToolProgressMessage` - Tool progress updates
+- `AuthStatusMessage` - Authentication status
+
 **Example:**
 
 ```graphql
@@ -119,8 +131,31 @@ subscription {
     sessionId: "session-id-from-create"
     prompt: "List files in current directory"
   ) {
-    type
-    sessionId
+    __typename
+    ... on AssistantMessage {
+      type
+      uuid
+      sessionId
+      parentToolUseId
+    }
+    ... on ResultMessage {
+      type
+      subtype
+      uuid
+      sessionId
+      durationMs
+      durationApiMs
+      isError
+      numTurns
+      totalCostUsd
+      result
+    }
+    ... on SystemMessage {
+      type
+      subtype
+      uuid
+      sessionId
+    }
   }
 }
 ```
@@ -176,8 +211,19 @@ subscription {
     sessionId: "your-session-id"
     prompt: "Remember this number: 42"
   ) {
-    type
-    sessionId
+    __typename
+    ... on ResultMessage {
+      type
+      subtype
+      result
+      totalCostUsd
+      durationMs
+    }
+    ... on AssistantMessage {
+      type
+      uuid
+      sessionId
+    }
   }
 }
 ```
@@ -189,11 +235,51 @@ subscription {
     sessionId: "your-session-id"
     prompt: "What number did I ask you to remember?"
   ) {
-    type
-    sessionId
+    __typename
+    ... on ResultMessage {
+      type
+      subtype
+      result
+      totalCostUsd
+      durationMs
+    }
+    ... on AssistantMessage {
+      type
+      uuid
+      sessionId
+    }
   }
 }
 ```
+
+## Message Types
+
+The `sendMessage` subscription returns a union of the following message types:
+
+### AssistantMessage
+Fields: `type`, `uuid`, `sessionId`, `parentToolUseId`
+
+### UserMessage / UserMessageReplay
+Fields: `type`, `uuid`, `sessionId`, `parentToolUseId`
+
+### ResultMessage
+Fields: `type`, `subtype`, `uuid`, `sessionId`, `durationMs`, `durationApiMs`, `isError`, `numTurns`, `totalCostUsd`, `result`
+
+Contains the final result of the conversation turn.
+
+### SystemMessage
+Fields: `type`, `subtype`, `uuid`, `sessionId`
+
+### PartialAssistantMessage
+Fields: `type`, `uuid`, `sessionId`, `parentToolUseId`
+
+Streaming partial messages during response generation.
+
+### CompactBoundaryMessage
+Fields: `type`, `subtype`, `uuid`, `sessionId`
+
+### StatusMessage / HookResponseMessage / ToolProgressMessage / AuthStatusMessage
+Fields: `type`
 
 ## Scripts
 
