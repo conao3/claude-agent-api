@@ -1,20 +1,40 @@
+from collections.abc import AsyncGenerator
+from typing import Annotated
+
 import strawberry
-from typing import AsyncGenerator
+
 from .client import ClaudeAgentClient
 from .config import get_claude_cli_path
 from .models import (
-    SessionResult as SessionResultModel,
-    PromptResult as PromptResultModel,
     AssistantMessage as AssistantMessageModel,
-    UserMessage as UserMessageModel,
-    UserMessageReplay as UserMessageReplayModel,
-    ResultMessage as ResultMessageModel,
-    SystemMessage as SystemMessageModel,
-    PartialAssistantMessage as PartialAssistantMessageModel,
+)
+from .models import (
     CompactBoundaryMessage as CompactBoundaryMessageModel,
+)
+from .models import (
+    PartialAssistantMessage as PartialAssistantMessageModel,
+)
+from .models import (
+    PromptResult as PromptResultModel,
+)
+from .models import (
+    ResultMessage as ResultMessageModel,
+)
+from .models import (
+    SessionResult as SessionResultModel,
+)
+from .models import (
+    SystemMessage as SystemMessageModel,
+)
+from .models import (
+    UserMessage as UserMessageModel,
+)
+from .models import (
+    UserMessageReplay as UserMessageReplayModel,
 )
 
 _global_client: ClaudeAgentClient | None = None
+
 
 def get_global_client() -> ClaudeAgentClient:
     global _global_client
@@ -100,15 +120,16 @@ class CompactBoundaryMessage:
     session_id: strawberry.auto
 
 
-Message = strawberry.union("Message", (
-    AssistantMessage,
-    UserMessage,
-    UserMessageReplay,
-    ResultMessage,
-    SystemMessage,
-    PartialAssistantMessage,
-    CompactBoundaryMessage,
-))
+Message = Annotated[
+    AssistantMessage
+    | UserMessage
+    | UserMessageReplay
+    | ResultMessage
+    | SystemMessage
+    | PartialAssistantMessage
+    | CompactBoundaryMessage,
+    strawberry.union("Message"),
+]
 
 
 @strawberry.type
@@ -129,7 +150,9 @@ class Mutation:
     @strawberry.mutation
     async def run_prompt(self, prompt: str, model: str | None = None) -> PromptResult:
         cli_path = get_claude_cli_path()
-        client = ClaudeAgentClient(model=model or "claude-sonnet-4-5-20250929", cli_path=cli_path)
+        client = ClaudeAgentClient(
+            model=model or "claude-sonnet-4-5-20250929", cli_path=cli_path
+        )
         try:
             result = await client.run_prompt(prompt, model)
             return PromptResult.from_pydantic(result)
@@ -140,7 +163,9 @@ class Mutation:
 @strawberry.type
 class Subscription:
     @strawberry.subscription
-    async def send_message(self, session_id: str, prompt: str) -> AsyncGenerator[Message, None]:
+    async def send_message(
+        self, session_id: str, prompt: str
+    ) -> AsyncGenerator[Message]:
         client = get_global_client()
         async for message in client.send_message(session_id, prompt):
             if isinstance(message, AssistantMessageModel):

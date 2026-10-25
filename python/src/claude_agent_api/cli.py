@@ -1,10 +1,13 @@
 import asyncio
+
 from .client import ClaudeAgentClient
 from .config import get_claude_cli_path
 from .models import AssistantMessage, ResultMessage
 
 
-async def run_prompt_command(client: ClaudeAgentClient, prompt: str, model: str | None = None):
+async def run_prompt_command(
+    client: ClaudeAgentClient, prompt: str, model: str | None = None
+):
     result = await client.run_prompt(prompt, model)
     print(f"Result: {result.result}")
     print(f"Session ID: {result.session_id}")
@@ -45,7 +48,9 @@ async def interactive_mode(client: ClaudeAgentClient, model: str | None = None):
                 elif isinstance(message, ResultMessage):
                     if message.result:
                         print(f"\nResult: {message.result}")
-                    print(f"Cost: ${message.total_cost_usd:.6f}, Duration: {message.duration_ms:.0f}ms\n")
+                    print(
+                        f"Cost: ${message.total_cost_usd:.6f}, Duration: {message.duration_ms:.0f}ms\n"
+                    )
         except KeyboardInterrupt:
             print("\nExiting...")
             break
@@ -65,7 +70,9 @@ async def main_async():
     prompt_parser = subparsers.add_parser("prompt", help="Run a single prompt")
     prompt_parser.add_argument("prompt", help="Prompt to send")
 
-    message_parser = subparsers.add_parser("message", help="Send a message to existing session")
+    message_parser = subparsers.add_parser(
+        "message", help="Send a message to existing session"
+    )
     message_parser.add_argument("session_id", help="Session ID")
     message_parser.add_argument("prompt", help="Prompt to send")
 
@@ -74,7 +81,9 @@ async def main_async():
     args = parser.parse_args()
 
     cli_path = args.cli_path or get_claude_cli_path()
-    client = ClaudeAgentClient(model=args.model or "claude-sonnet-4-5-20250929", cli_path=cli_path)
+    client = ClaudeAgentClient(
+        model=args.model or "claude-sonnet-4-5-20250929", cli_path=cli_path
+    )
 
     try:
         if args.command == "prompt":

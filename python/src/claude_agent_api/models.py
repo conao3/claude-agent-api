@@ -1,4 +1,5 @@
 from typing import Literal
+
 from pydantic import BaseModel, Field
 
 
@@ -93,4 +94,12 @@ class CompactBoundaryMessage(BaseModel):
     session_id: str = Field(alias="sessionId")
 
 
-Message = AssistantMessage | UserMessage | UserMessageReplay | ResultMessage | SystemMessage | PartialAssistantMessage | CompactBoundaryMessage
+Message = (
+    AssistantMessage
+    | UserMessage
+    | UserMessageReplay
+    | ResultMessage
+    | SystemMessage
+    | PartialAssistantMessage
+    | CompactBoundaryMessage
+)

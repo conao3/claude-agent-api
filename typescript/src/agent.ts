@@ -1,10 +1,4 @@
-import {
-  unstable_v2_prompt,
-  unstable_v2_createSession,
-  unstable_v2_resumeSession,
-  type SDKMessage,
-  SDKAssistantMessage,
-} from "@anthropic-ai/claude-agent-sdk";
+import { query, type SDKMessage, type SDKAssistantMessage } from "@anthropic-ai/claude-agent-sdk";
 
 type CreateSessionArgs = {
   model?: string | null | undefined;
@@ -17,21 +11,17 @@ type CreateSessionResult = {
 export async function createSession(
   args: CreateSessionArgs
 ): Promise<CreateSessionResult> {
-  const session = unstable_v2_createSession({
-    model: args.model || "claude-sonnet-4-5-20250929",
-  });
-
-  await session.send("hi");
+  const session = query({ prompt: "hi", options: { model: args.model || "claude-sonnet-4-5-20250929" } });
 
   let sessionId: string | undefined;
-  for await (const msg of session.stream()) {
+  for await (const msg of session) {
     if (msg.type === "system" && msg.subtype === "init") {
       sessionId = msg.session_id;
       break;
     }
   }
 
-  session.close();
+  await session.return();
 
   if (!sessionId) {
     throw new Error("Failed to get session ID");
@@ -53,13 +43,12 @@ type SendMessageResult = (
 export async function* sendMessage(
   args: SendMessageArgs
 ): AsyncGenerator<SendMessageResult> {
-  const session = unstable_v2_resumeSession(args.sessionId, {
-    model: "claude-sonnet-4-5-20250929",
+  const session = query({
+    prompt: args.prompt,
+    options: { model: "claude-sonnet-4-5-20250929", resume: args.sessionId },
   });
 
-  await session.send(args.prompt);
-
-  for await (const msg of session.stream()) {
+  for await (const msg of session) {
     if (msg.type === "assistant") {
       yield { ...msg, message: msg.message.content.filter(b => b.type === 'text').map(b => b.text).join('') };
       continue;
@@ -67,7 +56,7 @@ export async function* sendMessage(
     yield msg;
   }
 
-  session.close();
+  await session.return();
 }
 
 type RunPromptArgs = {
@@ -83,12 +72,16 @@ type RunPromptResult = {
 }
 
 export async function runPrompt(args: RunPromptArgs): Promise<RunPromptResult> {
-  const result = await unstable_v2_prompt(args.prompt, {
-    model: args.model || "claude-sonnet-4-5-20250929",
-  });
+  let result: Extract<SDKMessage, { type: "result" }> | undefined;
+  for await (const msg of query({
+    prompt: args.prompt,
+    options: { model: args.model || "claude-sonnet-4-5-20250929" },
+  })) {
+    if (msg.type === "result") result = msg;
+  }
 
-  if (result.subtype !== "success") {
-    throw new Error(`Error from agent: ${result.subtype}`);
+  if (!result || result.subtype !== "success") {
+    throw new Error(`Error from agent: ${result?.subtype ?? "no result"}`);
   }
 
   return {
