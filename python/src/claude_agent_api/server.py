@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from strawberry.fastapi import GraphQLRouter
+
 from .schema import schema
 
 
@@ -15,6 +16,7 @@ app = create_app()
 
 def main():
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=4001)
 
 

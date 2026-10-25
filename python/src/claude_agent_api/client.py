@@ -1,11 +1,28 @@
-from typing import AsyncIterator
-import time
-from claude_agent_sdk import query, ClaudeSDKClient, ClaudeAgentOptions, AssistantMessage as SDKAssistantMessage, ResultMessage as SDKResultMessage, SystemMessage as SDKSystemMessage, UserMessage as SDKUserMessage
-from .models import SessionResult, PromptResult, Message, AssistantMessage, UserMessage, UserMessageReplay, ResultMessage, SystemMessage, PartialAssistantMessage, CompactBoundaryMessage
+from collections.abc import AsyncIterator
+
+from claude_agent_sdk import AssistantMessage as SDKAssistantMessage
+from claude_agent_sdk import ClaudeAgentOptions, ClaudeSDKClient, query
+from claude_agent_sdk import ResultMessage as SDKResultMessage
+from claude_agent_sdk import SystemMessage as SDKSystemMessage
+from claude_agent_sdk import UserMessage as SDKUserMessage
+
+from .models import (
+    AssistantMessage,
+    CompactBoundaryMessage,
+    Message,
+    PromptResult,
+    ResultMessage,
+    SessionResult,
+    SystemMessage,
+    UserMessage,
+    UserMessageReplay,
+)
 
 
 class ClaudeAgentClient:
-    def __init__(self, model: str = "claude-sonnet-4-5-20250929", cli_path: str | None = None):
+    def __init__(
+        self, model: str = "claude-sonnet-4-5-20250929", cli_path: str | None = None
+    ):
         self.model = model
         self.cli_path = cli_path
         self._sessions: dict[str, ClaudeSDKClient] = {}
@@ -59,7 +76,9 @@ class ClaudeAgentClient:
             duration_ms=duration_ms,
         )
 
-    async def send_message(self, session_id: str, prompt: str) -> AsyncIterator[Message]:
+    async def send_message(
+        self, session_id: str, prompt: str
+    ) -> AsyncIterator[Message]:
         import uuid as uuid_module
 
         client = self._sessions.get(session_id)
@@ -84,19 +103,23 @@ class ClaudeAgentClient:
                 )
             elif isinstance(msg, SDKUserMessage):
                 msg_uuid = str(uuid_module.uuid4())
-                if hasattr(msg, 'uuid') and msg.uuid:
+                if hasattr(msg, "uuid") and msg.uuid:
                     yield UserMessageReplay(
                         type="user",
                         uuid=msg_uuid,
                         session_id=session_id,
-                        parent_tool_use_id=msg.parent_tool_use_id if hasattr(msg, 'parent_tool_use_id') else None,
+                        parent_tool_use_id=msg.parent_tool_use_id
+                        if hasattr(msg, "parent_tool_use_id")
+                        else None,
                     )
                 else:
                     yield UserMessage(
                         type="user",
                         uuid=None,
                         session_id=session_id,
-                        parent_tool_use_id=msg.parent_tool_use_id if hasattr(msg, 'parent_tool_use_id') else None,
+                        parent_tool_use_id=msg.parent_tool_use_id
+                        if hasattr(msg, "parent_tool_use_id")
+                        else None,
                     )
             elif isinstance(msg, SDKResultMessage):
                 yield ResultMessage(
@@ -112,8 +135,14 @@ class ClaudeAgentClient:
                     result=msg.result if msg.subtype == "success" else None,
                 )
             elif isinstance(msg, SDKSystemMessage):
-                msg_uuid = msg.data.get("uuid") if hasattr(msg, "data") else str(uuid_module.uuid4())
-                msg_session_id = msg.data.get("session_id") if hasattr(msg, "data") else session_id
+                msg_uuid = (
+                    msg.data.get("uuid")
+                    if hasattr(msg, "data")
+                    else str(uuid_module.uuid4())
+                )
+                msg_session_id = (
+                    msg.data.get("session_id") if hasattr(msg, "data") else session_id
+                )
 
                 if msg.subtype == "compact_boundary":
                     yield CompactBoundaryMessage(
