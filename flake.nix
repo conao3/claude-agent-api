@@ -23,7 +23,7 @@
       }: let
         overlay = final: prev: let
           bun = prev.bun;
-          python = prev.python313;
+          python = prev.python315;
           uv = prev.uv;
         in {
           inherit bun python uv;
