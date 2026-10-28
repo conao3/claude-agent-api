@@ -52,6 +52,7 @@ bun run dev
 ```
 
 Server runs on:
+
 - HTTP: http://localhost:4000/graphql
 - WebSocket: ws://localhost:4000/graphql
 
@@ -102,6 +103,7 @@ mutation {
 Execute a prompt and get the result (non-streaming).
 
 **Arguments:**
+
 - `prompt` (required): The prompt to execute
 - `model` (optional): Claude model to use (default: `claude-sonnet-4-5-20250929`)
 - `sessionId` (optional): Resume an existing session
@@ -142,10 +144,12 @@ mutation {
 Send a message and receive streaming responses.
 
 **Arguments:**
+
 - `sessionId` (required): Session ID from createSession
 - `prompt` (required): The prompt to send
 
 **Returns:** Union type of:
+
 - `AssistantMessage` - Assistant responses
 - `UserMessage` / `UserMessageReplay` - User messages
 - `ResultMessage` - Final result with cost and duration
@@ -226,6 +230,7 @@ mutation {
 ### Option 2: Using sendMessage (Streaming via WebSocket)
 
 1. Create a session:
+
 ```graphql
 mutation {
   createSession {
@@ -235,6 +240,7 @@ mutation {
 ```
 
 2. Send messages via WebSocket subscription:
+
 ```graphql
 subscription {
   sendMessage(
@@ -259,6 +265,7 @@ subscription {
 ```
 
 3. Continue the conversation with the same sessionId:
+
 ```graphql
 subscription {
   sendMessage(
@@ -287,25 +294,31 @@ subscription {
 The `sendMessage` subscription returns a union of the following message types:
 
 ### AssistantMessage
+
 Fields: `type`, `uuid`, `sessionId`, `parentToolUseId`
 
 ### UserMessage / UserMessageReplay
+
 Fields: `type`, `uuid`, `sessionId`, `parentToolUseId`
 
 ### ResultMessage
+
 Fields: `type`, `subtype`, `uuid`, `sessionId`, `durationMs`, `durationApiMs`, `isError`, `numTurns`, `totalCostUsd`, `result`
 
 Contains the final result of the conversation turn.
 
 ### SystemMessage
+
 Fields: `type`, `subtype`, `uuid`, `sessionId`
 
 ### PartialAssistantMessage
+
 Fields: `type`, `uuid`, `sessionId`, `parentToolUseId`
 
 Streaming partial messages during response generation.
 
 ### CompactBoundaryMessage
+
 Fields: `type`, `subtype`, `uuid`, `sessionId`
 
 ## Scripts
@@ -339,9 +352,11 @@ make python-server
 ```
 
 Server runs on:
+
 - HTTP: http://localhost:4001/graphql
 
 Or run directly:
+
 ```bash
 uv run claude-agent-server
 ```
@@ -349,21 +364,25 @@ uv run claude-agent-server
 #### CLI Client Usage
 
 1. **Single prompt (non-streaming):**
+
 ```bash
 uv run claude-agent-api prompt "List files in current directory"
 ```
 
 2. **Send message to existing session:**
+
 ```bash
 uv run claude-agent-api message <session-id> "Show me the first file"
 ```
 
 3. **Interactive mode:**
+
 ```bash
 uv run claude-agent-api interactive
 ```
 
 Or using Make:
+
 ```bash
 make python-run ARGS='prompt "hello"'
 make python-run ARGS='interactive'
@@ -394,4 +413,5 @@ await client.close()
 All response types are validated using Pydantic models for type safety.
 
 ## memo
+
 - ref: https://github.com/anthropics/claude-agent-sdk-python/blob/main/src/claude_agent_sdk/_internal/transport/subprocess_cli.py

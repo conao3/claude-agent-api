@@ -1,17 +1,24 @@
-import { query, type SDKMessage, type SDKAssistantMessage } from "@anthropic-ai/claude-agent-sdk";
+import {
+  query,
+  type SDKMessage,
+  type SDKAssistantMessage,
+} from "@anthropic-ai/claude-agent-sdk";
 
 type CreateSessionArgs = {
   model?: string | null | undefined;
-}
+};
 
 type CreateSessionResult = {
   sessionId: string;
-}
+};
 
 export async function createSession(
-  args: CreateSessionArgs
+  args: CreateSessionArgs,
 ): Promise<CreateSessionResult> {
-  const session = query({ prompt: "hi", options: { model: args.model || "claude-sonnet-4-5-20250929" } });
+  const session = query({
+    prompt: "hi",
+    options: { model: args.model || "claude-sonnet-4-5-20250929" },
+  });
 
   let sessionId: string | undefined;
   for await (const msg of session) {
@@ -33,15 +40,14 @@ export async function createSession(
 type SendMessageArgs = {
   sessionId: string;
   prompt: string;
-}
+};
 
-type SendMessageResult = (
-  Exclude<SDKMessage, SDKAssistantMessage> |
-  Omit<SDKAssistantMessage, "message"> & { message: string }
-)
+type SendMessageResult =
+  | Exclude<SDKMessage, SDKAssistantMessage>
+  | (Omit<SDKAssistantMessage, "message"> & { message: string });
 
 export async function* sendMessage(
-  args: SendMessageArgs
+  args: SendMessageArgs,
 ): AsyncGenerator<SendMessageResult> {
   const session = query({
     prompt: args.prompt,
@@ -50,7 +56,13 @@ export async function* sendMessage(
 
   for await (const msg of session) {
     if (msg.type === "assistant") {
-      yield { ...msg, message: msg.message.content.filter(b => b.type === 'text').map(b => b.text).join('') };
+      yield {
+        ...msg,
+        message: msg.message.content
+          .filter((b) => b.type === "text")
+          .map((b) => b.text)
+          .join(""),
+      };
       continue;
     }
     yield msg;
@@ -62,14 +74,14 @@ export async function* sendMessage(
 type RunPromptArgs = {
   prompt: string;
   model?: string | null | undefined;
-}
+};
 
 type RunPromptResult = {
   result: string;
   sessionId: string;
   totalCostUsd: number;
   durationMs: number;
-}
+};
 
 export async function runPrompt(args: RunPromptArgs): Promise<RunPromptResult> {
   let result: Extract<SDKMessage, { type: "result" }> | undefined;
