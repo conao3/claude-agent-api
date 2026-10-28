@@ -1,0 +1,16 @@
+version: 2
+updates:
+  - package-ecosystem: uv
+    directory: "/python"
+    schedule:
+      interval: weekly
+    groups:
+      uv-minor-patch:
+        update-types: [minor, patch]
+  - package-ecosystem: bun
+    directory: "/typescript"
+    schedule:
+      interval: weekly
+    groups:
+      bun-minor-patch:
+        update-types: [minor, patch]

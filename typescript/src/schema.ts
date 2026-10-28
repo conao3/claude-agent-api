@@ -58,7 +58,10 @@ ModelInfoType.implement({
   }),
 });
 
-type AssistantMessageWithStringContent = Omit<SDKAssistantMessage, "message"> & {
+type AssistantMessageWithStringContent = Omit<
+  SDKAssistantMessage,
+  "message"
+> & {
   message: string;
 };
 
@@ -92,9 +95,8 @@ UserMessageType.implement({
   }),
 });
 
-const UserMessageReplayType = builder.objectRef<SDKUserMessageReplay>(
-  "UserMessageReplay"
-);
+const UserMessageReplayType =
+  builder.objectRef<SDKUserMessageReplay>("UserMessageReplay");
 
 UserMessageReplayType.implement({
   fields: (t) => ({
@@ -156,7 +158,7 @@ PartialAssistantMessageType.implement({
 });
 
 const CompactBoundaryMessageType = builder.objectRef<SDKCompactBoundaryMessage>(
-  "CompactBoundaryMessage"
+  "CompactBoundaryMessage",
 );
 
 CompactBoundaryMessageType.implement({

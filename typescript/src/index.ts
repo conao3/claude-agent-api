@@ -12,5 +12,5 @@ const server = Bun.serve({
 });
 
 console.log(
-  `GraphQL server is running on http://localhost:${server.port}/graphql`
+  `GraphQL server is running on http://localhost:${server.port}/graphql`,
 );
